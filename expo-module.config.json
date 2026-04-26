@@ -1,6 +1,7 @@
 {
   "platforms": ["ios"],
   "ios": {
-    "modules": ["ExpoHomekitModule"]
+    "modules": ["ExpoHomekitModule"],
+    "podspecPath": "ExpoHomekit.podspec"
   }
 }
