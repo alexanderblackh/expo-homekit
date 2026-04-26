@@ -6,6 +6,7 @@ export type {
   HMAccessory,
   HMRoom,
   HMScene,
+  HMServiceGroup,
   HMHome,
   CharacteristicUpdateEvent,
   AccessoryReachabilityEvent,

@@ -40,6 +40,12 @@ interface HMScene {
     name: string;
     actionSetType: string;
 }
+interface HMServiceGroup {
+    uuid: string;
+    name: string;
+    /** UUIDs of the HMService objects that belong to this group */
+    serviceUUIDs: string[];
+}
 interface HMHome {
     uuid: string;
     name: string;
@@ -47,6 +53,7 @@ interface HMHome {
     rooms: HMRoom[];
     accessories: HMAccessory[];
     scenes: HMScene[];
+    serviceGroups: HMServiceGroup[];
 }
 interface CharacteristicUpdateEvent {
     homeUUID: string;
@@ -214,4 +221,4 @@ declare function usePowerState(homeUUID: string, accessory: HMAccessory): [boole
  */
 declare function useCharacteristic(homeUUID: string, accessoryUUID: string, charType: string): HMCharacteristic | undefined;
 
-export { type AccessoryReachabilityEvent, CharacteristicType, type CharacteristicUpdateEvent, type HMAccessory, type HMCharacteristic, type HMCharacteristicMetadata, type HMHome, type HMRoom, type HMScene, type HMService, type HomesDidUpdateEvent, ServiceType, type ThermostatMode, type UseHomesResult, addCharacteristicListener, addHomesUpdateListener, addReachabilityListener, enableNotifications, executeScene, getHomes, readByType, readCharacteristic, refreshValues, setActive, setBlindPosition, setBrightness, setColorTemperature, setGarageDoor, setHue, setLock, setMute, setPower, setSaturation, setThermostatMode, setThermostatTarget, setVolume, toggleActive, togglePower, useAccessory, useCharacteristic, useCharacteristicValue, useHomes, usePowerState, writeByType, writeCharacteristic, writeStringByType, writeStringCharacteristic };
+export { type AccessoryReachabilityEvent, CharacteristicType, type CharacteristicUpdateEvent, type HMAccessory, type HMCharacteristic, type HMCharacteristicMetadata, type HMHome, type HMRoom, type HMScene, type HMService, type HMServiceGroup, type HomesDidUpdateEvent, ServiceType, type ThermostatMode, type UseHomesResult, addCharacteristicListener, addHomesUpdateListener, addReachabilityListener, enableNotifications, executeScene, getHomes, readByType, readCharacteristic, refreshValues, setActive, setBlindPosition, setBrightness, setColorTemperature, setGarageDoor, setHue, setLock, setMute, setPower, setSaturation, setThermostatMode, setThermostatTarget, setVolume, toggleActive, togglePower, useAccessory, useCharacteristic, useCharacteristicValue, useHomes, usePowerState, writeByType, writeCharacteristic, writeStringByType, writeStringCharacteristic };

@@ -317,6 +317,15 @@ public class ExpoHomekitModule: Module {
       "scenes": home.actionSets
         .filter { $0.actionSetType == HMActionSetTypeUserDefined }
         .map { serializeScene($0) },
+      "serviceGroups": home.serviceGroups.map { serializeServiceGroup($0) },
+    ]
+  }
+
+  private func serializeServiceGroup(_ group: HMServiceGroup) -> [String: Any] {
+    [
+      "uuid": group.uniqueIdentifier.uuidString,
+      "name": group.name,
+      "serviceUUIDs": group.services.map { $0.uniqueIdentifier.uuidString },
     ]
   }
 

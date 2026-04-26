@@ -44,6 +44,13 @@ export interface HMScene {
   actionSetType: string;
 }
 
+export interface HMServiceGroup {
+  uuid: string;
+  name: string;
+  /** UUIDs of the HMService objects that belong to this group */
+  serviceUUIDs: string[];
+}
+
 export interface HMHome {
   uuid: string;
   name: string;
@@ -51,6 +58,7 @@ export interface HMHome {
   rooms: HMRoom[];
   accessories: HMAccessory[];
   scenes: HMScene[];
+  serviceGroups: HMServiceGroup[];
 }
 
 // ─── Event payloads ───────────────────────────────────────────────────────────
