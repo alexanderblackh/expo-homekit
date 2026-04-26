@@ -1,0 +1,51 @@
+{
+  "name": "@alexanderblackh/expo-homekit",
+  "version": "0.1.0",
+  "description": "Full HomeKit control and live status for Expo iOS apps. Read/write accessories, receive real-time updates via HMHomeManager.",
+  "keywords": ["expo", "expo-module", "homekit", "ios", "smart-home", "react-native"],
+  "author": "Alex Black",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexanderblackh/expo-homekit.git"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "ios",
+    "app.plugin.js",
+    "expo-module.config.json",
+    "ExpoHomekit.podspec",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@expo/config-plugins": "^9.0.0",
+    "expo-modules-core": "^2.0.0"
+  },
+  "peerDependencies": {
+    "expo": ">=51.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "private": true
+}
