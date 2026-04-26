@@ -28,13 +28,37 @@ __export(src_exports, {
   enableNotifications: () => enableNotifications,
   executeScene: () => executeScene,
   getHomes: () => getHomes,
+  readByType: () => readByType,
   readCharacteristic: () => readCharacteristic,
   refreshValues: () => refreshValues,
+  setActive: () => setActive,
+  setBlindPosition: () => setBlindPosition,
+  setBrightness: () => setBrightness,
+  setColorTemperature: () => setColorTemperature,
+  setGarageDoor: () => setGarageDoor,
+  setHue: () => setHue,
+  setLock: () => setLock,
+  setMute: () => setMute,
+  setPower: () => setPower,
+  setSaturation: () => setSaturation,
+  setThermostatMode: () => setThermostatMode,
+  setThermostatTarget: () => setThermostatTarget,
+  setVolume: () => setVolume,
+  toggleActive: () => toggleActive,
+  togglePower: () => togglePower,
+  useAccessory: () => useAccessory,
+  useCharacteristic: () => useCharacteristic,
+  useCharacteristicValue: () => useCharacteristicValue,
+  useHomes: () => useHomes,
+  usePowerState: () => usePowerState,
+  writeByType: () => writeByType,
   writeCharacteristic: () => writeCharacteristic,
+  writeStringByType: () => writeStringByType,
   writeStringCharacteristic: () => writeStringCharacteristic
 });
 module.exports = __toCommonJS(src_exports);
-var import_expo_modules_core = require("expo-modules-core");
+
+// src/constants.ts
 var CharacteristicType = {
   PowerState: "00000025-0000-1000-8000-0026BB765291",
   Brightness: "00000008-0000-1000-8000-0026BB765291",
@@ -99,8 +123,10 @@ var ServiceType = {
   AccessoryInformation: "0000003E-0000-1000-8000-0026BB765291",
   BatteryService: "00000096-0000-1000-8000-0026BB765291"
 };
+
+// src/native.ts
+var import_expo_modules_core = require("expo-modules-core");
 var ExpoHomekitNative = (0, import_expo_modules_core.requireNativeModule)("ExpoHomekit");
-var emitter = new import_expo_modules_core.EventEmitter(ExpoHomekitNative);
 function getHomes() {
   return ExpoHomekitNative.getHomes();
 }
@@ -139,6 +165,12 @@ function executeScene(homeUUID, sceneUUID) {
 function enableNotifications(homeUUID) {
   return ExpoHomekitNative.enableNotifications(homeUUID);
 }
+
+// src/events.ts
+var import_expo_modules_core2 = require("expo-modules-core");
+var emitter = new import_expo_modules_core2.EventEmitter(
+  (0, import_expo_modules_core2.requireNativeModule)("ExpoHomekit")
+);
 function addCharacteristicListener(listener) {
   return emitter.addListener("onAccessoryValueUpdate", listener);
 }
@@ -147,5 +179,414 @@ function addReachabilityListener(listener) {
 }
 function addHomesUpdateListener(listener) {
   return emitter.addListener("onHomesDidUpdate", listener);
+}
+
+// src/helpers.ts
+function findChar(accessory, charType) {
+  for (const service of accessory.services) {
+    const char = service.characteristics.find(
+      (c) => c.characteristicType === charType
+    );
+    if (char) return { serviceUUID: service.uuid, charUUID: char.uuid };
+  }
+  return null;
+}
+function requireChar(accessory, charType) {
+  const found = findChar(accessory, charType);
+  if (!found)
+    throw new Error(`Accessory "${accessory.name}" has no ${charType}`);
+  return found;
+}
+function setPower(homeUUID, accessory, on) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.PowerState
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    on ? 1 : 0
+  );
+}
+async function togglePower(homeUUID, accessory) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.PowerState
+  );
+  const current = await readCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    current ? 0 : 1
+  );
+}
+function setActive(homeUUID, accessory, active) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Active
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    active ? 1 : 0
+  );
+}
+async function toggleActive(homeUUID, accessory) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Active
+  );
+  const current = await readCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    current ? 0 : 1
+  );
+}
+function setBrightness(homeUUID, accessory, percent) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Brightness
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.max(0, Math.min(100, Math.round(percent)))
+  );
+}
+function setHue(homeUUID, accessory, degrees) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Hue
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.max(0, Math.min(360, degrees))
+  );
+}
+function setSaturation(homeUUID, accessory, percent) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Saturation
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.max(0, Math.min(100, Math.round(percent)))
+  );
+}
+function setColorTemperature(homeUUID, accessory, mireds) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.ColorTemperature
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.round(mireds)
+  );
+}
+function setLock(homeUUID, accessory, locked) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.LockTargetState
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    locked ? 1 : 0
+  );
+}
+function setGarageDoor(homeUUID, accessory, open) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.TargetDoorState
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    open ? 0 : 1
+  );
+}
+function setBlindPosition(homeUUID, accessory, percent) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.TargetPosition
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.max(0, Math.min(100, Math.round(percent)))
+  );
+}
+function setThermostatTarget(homeUUID, accessory, celsius) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.TargetTemperature
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    celsius
+  );
+}
+var THERMOSTAT_MODE = {
+  off: 0,
+  heat: 1,
+  cool: 2,
+  auto: 3
+};
+function setThermostatMode(homeUUID, accessory, mode) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.TargetHeatingCooling
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    THERMOSTAT_MODE[mode]
+  );
+}
+function setVolume(homeUUID, accessory, percent) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Volume
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    Math.max(0, Math.min(100, Math.round(percent)))
+  );
+}
+function setMute(homeUUID, accessory, muted) {
+  const { serviceUUID, charUUID } = requireChar(
+    accessory,
+    CharacteristicType.Mute
+  );
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    muted ? 1 : 0
+  );
+}
+function writeByType(homeUUID, accessory, charType, value) {
+  const { serviceUUID, charUUID } = requireChar(accessory, charType);
+  return writeCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    value
+  );
+}
+function writeStringByType(homeUUID, accessory, charType, value) {
+  const { serviceUUID, charUUID } = requireChar(accessory, charType);
+  return writeStringCharacteristic(
+    homeUUID,
+    accessory.uuid,
+    serviceUUID,
+    charUUID,
+    value
+  );
+}
+function readByType(homeUUID, accessory, charType) {
+  const { serviceUUID, charUUID } = requireChar(accessory, charType);
+  return readCharacteristic(homeUUID, accessory.uuid, serviceUUID, charUUID);
+}
+
+// src/hooks.ts
+var import_react = require("react");
+function useHomes() {
+  const [homes, setHomes] = (0, import_react.useState)([]);
+  const [loading, setLoading] = (0, import_react.useState)(true);
+  const refresh = (0, import_react.useCallback)(async () => {
+    const h = await getHomes();
+    setHomes(h);
+  }, []);
+  (0, import_react.useEffect)(() => {
+    let mounted = true;
+    getHomes().then((h) => {
+      if (!mounted) return;
+      setHomes(h);
+      setLoading(false);
+      h.forEach((home) => enableNotifications(home.uuid).catch(() => {
+      }));
+    });
+    const sub = addHomesUpdateListener(({ homes: h }) => {
+      setHomes(h);
+    });
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+  return { homes, loading, refresh };
+}
+function useAccessory(homeUUID, accessoryUUID) {
+  const [homes, setHomes] = (0, import_react.useState)([]);
+  (0, import_react.useEffect)(() => {
+    let mounted = true;
+    getHomes().then((h) => {
+      if (mounted) setHomes(h);
+    });
+    const homeSub = addHomesUpdateListener(({ homes: h }) => setHomes(h));
+    const charSub = addCharacteristicListener((e) => {
+      if (e.homeUUID !== homeUUID || e.accessoryUUID !== accessoryUUID) return;
+      setHomes(
+        (prev) => prev.map((home) => {
+          if (home.uuid !== homeUUID) return home;
+          return {
+            ...home,
+            accessories: home.accessories.map((acc) => {
+              if (acc.uuid !== accessoryUUID) return acc;
+              return {
+                ...acc,
+                services: acc.services.map((svc) => ({
+                  ...svc,
+                  characteristics: svc.characteristics.map(
+                    (c) => c.characteristicType === e.characteristicType ? { ...c, value: e.value ?? void 0 } : c
+                  )
+                }))
+              };
+            })
+          };
+        })
+      );
+    });
+    const reachSub = addReachabilityListener((e) => {
+      if (e.homeUUID !== homeUUID || e.accessoryUUID !== accessoryUUID) return;
+      setHomes(
+        (prev) => prev.map((home) => {
+          if (home.uuid !== homeUUID) return home;
+          return {
+            ...home,
+            accessories: home.accessories.map(
+              (acc) => acc.uuid === accessoryUUID ? { ...acc, isReachable: e.isReachable } : acc
+            )
+          };
+        })
+      );
+    });
+    return () => {
+      mounted = false;
+      homeSub.remove();
+      charSub.remove();
+      reachSub.remove();
+    };
+  }, [homeUUID, accessoryUUID]);
+  return homes.find((h) => h.uuid === homeUUID)?.accessories.find((a) => a.uuid === accessoryUUID);
+}
+function useCharacteristicValue(homeUUID, accessoryUUID, charType) {
+  const [value, setValue] = (0, import_react.useState)(void 0);
+  (0, import_react.useEffect)(() => {
+    getHomes().then((homes) => {
+      const home = homes.find((h) => h.uuid === homeUUID);
+      const acc = home?.accessories.find((a) => a.uuid === accessoryUUID);
+      for (const svc of acc?.services ?? []) {
+        const c = svc.characteristics.find(
+          (ch) => ch.characteristicType === charType
+        );
+        if (c) {
+          setValue(c.value ?? null);
+          return;
+        }
+      }
+    });
+  }, [homeUUID, accessoryUUID, charType]);
+  (0, import_react.useEffect)(() => {
+    const sub = addCharacteristicListener((e) => {
+      if (e.homeUUID === homeUUID && e.accessoryUUID === accessoryUUID && e.characteristicType === charType) {
+        setValue(e.value ?? null);
+      }
+    });
+    return () => sub.remove();
+  }, [homeUUID, accessoryUUID, charType]);
+  return value;
+}
+function usePowerState(homeUUID, accessory) {
+  const value = useCharacteristicValue(
+    homeUUID,
+    accessory.uuid,
+    CharacteristicType.PowerState
+  );
+  const isOn = Boolean(value);
+  const set = (0, import_react.useCallback)(
+    (on) => setPower(homeUUID, accessory, on),
+    [homeUUID, accessory]
+  );
+  return [isOn, set];
+}
+function useCharacteristic(homeUUID, accessoryUUID, charType) {
+  const [char, setChar] = (0, import_react.useState)(void 0);
+  (0, import_react.useEffect)(() => {
+    function findChar2(homes) {
+      const home = homes.find((h) => h.uuid === homeUUID);
+      const acc = home?.accessories.find((a) => a.uuid === accessoryUUID);
+      for (const svc of acc?.services ?? []) {
+        const c = svc.characteristics.find(
+          (ch) => ch.characteristicType === charType
+        );
+        if (c) return c;
+      }
+      return void 0;
+    }
+    getHomes().then((homes) => setChar(findChar2(homes)));
+    const homeSub = addHomesUpdateListener(
+      ({ homes }) => setChar(findChar2(homes))
+    );
+    const charSub = addCharacteristicListener((e) => {
+      if (e.homeUUID === homeUUID && e.accessoryUUID === accessoryUUID && e.characteristicType === charType) {
+        setChar(
+          (prev) => prev ? { ...prev, value: e.value ?? void 0 } : prev
+        );
+      }
+    });
+    return () => {
+      homeSub.remove();
+      charSub.remove();
+    };
+  }, [homeUUID, accessoryUUID, charType]);
+  return char;
 }
 //# sourceMappingURL=index.js.map

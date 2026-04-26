@@ -4,16 +4,12 @@ interface HMCharacteristicMetadata {
     minimumValue?: number;
     maximumValue?: number;
     stepValue?: number;
-    /** HMCharacteristicMetadataFormat* constant string */
     format?: string;
-    /** HMCharacteristicMetadataUnits* constant string */
     units?: string;
 }
 interface HMCharacteristic {
     uuid: string;
-    /** HMCharacteristicType* constant string */
     characteristicType: string;
-    /** Human-readable description (e.g. "Power State") */
     description: string;
     value?: boolean | number | string;
     isReadable: boolean;
@@ -23,7 +19,6 @@ interface HMCharacteristic {
 }
 interface HMService {
     uuid: string;
-    /** HMServiceType* constant string */
     serviceType: string;
     name: string;
     isPrimaryService: boolean;
@@ -50,7 +45,6 @@ interface HMHome {
     name: string;
     isPrimary: boolean;
     rooms: HMRoom[];
-    /** All accessories in this home (regardless of room) */
     accessories: HMAccessory[];
     scenes: HMScene[];
 }
@@ -73,6 +67,7 @@ interface AccessoryReachabilityEvent {
 interface HomesDidUpdateEvent {
     homes: HMHome[];
 }
+
 declare const CharacteristicType: {
     readonly PowerState: "00000025-0000-1000-8000-0026BB765291";
     readonly Brightness: "00000008-0000-1000-8000-0026BB765291";
@@ -137,61 +132,86 @@ declare const ServiceType: {
     readonly AccessoryInformation: "0000003E-0000-1000-8000-0026BB765291";
     readonly BatteryService: "00000096-0000-1000-8000-0026BB765291";
 };
-/**
- * Returns all configured HomeKit homes with their full hierarchy:
- * rooms → accessories → services → characteristics (with current values).
- *
- * Values are populated from the local cache. Call refreshValues() to force
- * a fresh read from all accessories.
- */
+
 declare function getHomes(): Promise<HMHome[]>;
-/**
- * Reads fresh values from all readable characteristics in the given home,
- * then returns the updated home list.
- */
 declare function refreshValues(homeUUID: string): Promise<HMHome[]>;
-/**
- * Write a numeric or boolean value to a characteristic.
- * Pass booleans as 0/1; the native layer coerces to the correct type based
- * on the characteristic's metadata format.
- *
- * @example
- * // Turn on a light
- * await writeCharacteristic(homeUUID, accessoryUUID, serviceUUID, CharacteristicType.PowerState, 1)
- * // Set brightness to 80%
- * await writeCharacteristic(homeUUID, accessoryUUID, serviceUUID, CharacteristicType.Brightness, 80)
- */
 declare function writeCharacteristic(homeUUID: string, accessoryUUID: string, serviceUUID: string, characteristicUUID: string, value: number): Promise<void>;
-/**
- * Write a string value to a characteristic (rare — most are numeric/boolean).
- */
 declare function writeStringCharacteristic(homeUUID: string, accessoryUUID: string, serviceUUID: string, characteristicUUID: string, value: string): Promise<void>;
-/**
- * Read the current value of a single characteristic directly from the accessory.
- */
 declare function readCharacteristic(homeUUID: string, accessoryUUID: string, serviceUUID: string, characteristicUUID: string): Promise<boolean | number | string | null>;
-/**
- * Execute a scene (HMActionSet) by UUID.
- */
 declare function executeScene(homeUUID: string, sceneUUID: string): Promise<void>;
-/**
- * Subscribe to real-time characteristic change notifications for all
- * accessories in the given home. Should be called once after getHomes().
- * Re-subscription is handled automatically when homes update.
- */
 declare function enableNotifications(homeUUID: string): Promise<void>;
-/**
- * Fires when a characteristic value changes on any subscribed accessory.
- * Requires enableNotifications() to have been called for the home.
- */
+
 declare function addCharacteristicListener(listener: (event: CharacteristicUpdateEvent) => void): EventSubscription;
-/**
- * Fires when an accessory comes online or goes offline.
- */
 declare function addReachabilityListener(listener: (event: AccessoryReachabilityEvent) => void): EventSubscription;
-/**
- * Fires when the home list changes (accessory added/removed, home renamed, etc.).
- */
 declare function addHomesUpdateListener(listener: (event: HomesDidUpdateEvent) => void): EventSubscription;
 
-export { type AccessoryReachabilityEvent, CharacteristicType, type CharacteristicUpdateEvent, type HMAccessory, type HMCharacteristic, type HMCharacteristicMetadata, type HMHome, type HMRoom, type HMScene, type HMService, type HomesDidUpdateEvent, ServiceType, addCharacteristicListener, addHomesUpdateListener, addReachabilityListener, enableNotifications, executeScene, getHomes, readCharacteristic, refreshValues, writeCharacteristic, writeStringCharacteristic };
+declare function setPower(homeUUID: string, accessory: HMAccessory, on: boolean): Promise<void>;
+declare function togglePower(homeUUID: string, accessory: HMAccessory): Promise<void>;
+declare function setActive(homeUUID: string, accessory: HMAccessory, active: boolean): Promise<void>;
+declare function toggleActive(homeUUID: string, accessory: HMAccessory): Promise<void>;
+/** 0–100 */
+declare function setBrightness(homeUUID: string, accessory: HMAccessory, percent: number): Promise<void>;
+/** Hue in degrees, 0–360 */
+declare function setHue(homeUUID: string, accessory: HMAccessory, degrees: number): Promise<void>;
+/** Saturation 0–100 */
+declare function setSaturation(homeUUID: string, accessory: HMAccessory, percent: number): Promise<void>;
+/**
+ * Color temperature in mireds (140 = coolest/daylight, 500 = warmest).
+ * Convert from Kelvin: mireds = 1_000_000 / kelvin
+ */
+declare function setColorTemperature(homeUUID: string, accessory: HMAccessory, mireds: number): Promise<void>;
+/** LockTargetState: 0 = unsecured, 1 = secured */
+declare function setLock(homeUUID: string, accessory: HMAccessory, locked: boolean): Promise<void>;
+/** TargetDoorState: 0 = open, 1 = closed */
+declare function setGarageDoor(homeUUID: string, accessory: HMAccessory, open: boolean): Promise<void>;
+/** TargetPosition: 0 = fully closed, 100 = fully open */
+declare function setBlindPosition(homeUUID: string, accessory: HMAccessory, percent: number): Promise<void>;
+/** Target temperature in Celsius */
+declare function setThermostatTarget(homeUUID: string, accessory: HMAccessory, celsius: number): Promise<void>;
+/** TargetHeatingCooling: 0=off, 1=heat, 2=cool, 3=auto */
+type ThermostatMode = "off" | "heat" | "cool" | "auto";
+declare function setThermostatMode(homeUUID: string, accessory: HMAccessory, mode: ThermostatMode): Promise<void>;
+/** Volume 0–100 */
+declare function setVolume(homeUUID: string, accessory: HMAccessory, percent: number): Promise<void>;
+declare function setMute(homeUUID: string, accessory: HMAccessory, muted: boolean): Promise<void>;
+/** Write any numeric characteristic by CharacteristicType constant */
+declare function writeByType(homeUUID: string, accessory: HMAccessory, charType: string, value: number): Promise<void>;
+/** Write a string characteristic by CharacteristicType constant */
+declare function writeStringByType(homeUUID: string, accessory: HMAccessory, charType: string, value: string): Promise<void>;
+/** Read any characteristic by CharacteristicType constant */
+declare function readByType(homeUUID: string, accessory: HMAccessory, charType: string): Promise<boolean | number | string | null>;
+
+interface UseHomesResult {
+    homes: HMHome[];
+    loading: boolean;
+    /** Force-fetches fresh state from all accessories then updates homes */
+    refresh: () => Promise<void>;
+}
+/**
+ * Returns all HomeKit homes with live updates.
+ * Automatically enables notifications for all homes on mount.
+ */
+declare function useHomes(): UseHomesResult;
+/**
+ * Returns a single accessory and keeps it updated via real-time events.
+ * The returned accessory's characteristic values reflect the latest state.
+ */
+declare function useAccessory(homeUUID: string, accessoryUUID: string): HMAccessory | undefined;
+/**
+ * Returns the live value of a characteristic by type, for a given accessory.
+ * Subscribes to real-time updates — no polling needed.
+ *
+ * @param charType - A CharacteristicType constant
+ */
+declare function useCharacteristicValue(homeUUID: string, accessoryUUID: string, charType: string): boolean | number | string | null | undefined;
+/**
+ * Convenience hook for a single accessory's power state.
+ * Returns `[isOn, setPower]`.
+ */
+declare function usePowerState(homeUUID: string, accessory: HMAccessory): [boolean, (on: boolean) => Promise<void>];
+/**
+ * Returns a characteristic object with live-updated value, or undefined if not present.
+ */
+declare function useCharacteristic(homeUUID: string, accessoryUUID: string, charType: string): HMCharacteristic | undefined;
+
+export { type AccessoryReachabilityEvent, CharacteristicType, type CharacteristicUpdateEvent, type HMAccessory, type HMCharacteristic, type HMCharacteristicMetadata, type HMHome, type HMRoom, type HMScene, type HMService, type HomesDidUpdateEvent, ServiceType, type ThermostatMode, type UseHomesResult, addCharacteristicListener, addHomesUpdateListener, addReachabilityListener, enableNotifications, executeScene, getHomes, readByType, readCharacteristic, refreshValues, setActive, setBlindPosition, setBrightness, setColorTemperature, setGarageDoor, setHue, setLock, setMute, setPower, setSaturation, setThermostatMode, setThermostatTarget, setVolume, toggleActive, togglePower, useAccessory, useCharacteristic, useCharacteristicValue, useHomes, usePowerState, writeByType, writeCharacteristic, writeStringByType, writeStringCharacteristic };
