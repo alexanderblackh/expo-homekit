@@ -1,4 +1,6 @@
 import ExpoModulesCore
+
+#if !targetEnvironment(macCatalyst)
 import HomeKit
 
 public class ExpoHomekitModule: Module {
@@ -456,3 +458,53 @@ private class AccessoryDelegate: NSObject, HMAccessoryDelegate {
     module?.sendReachabilityUpdate(accessory: accessory)
   }
 }
+
+#else
+
+// MARK: - macOS Catalyst stub
+// HomeKit is not available on Mac Catalyst. This no-op stub satisfies Expo's
+// module registry without importing HomeKit or touching any TCC-gated APIs.
+
+public class ExpoHomekitModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("ExpoHomekit")
+
+    Events("onHomesDidUpdate", "onAccessoryValueUpdate", "onAccessoryReachabilityUpdate")
+
+    AsyncFunction("getHomes") { (promise: Promise) in
+      promise.resolve([])
+    }
+
+    AsyncFunction("refreshValues") { (_: String, promise: Promise) in
+      promise.resolve([])
+    }
+
+    AsyncFunction("writeCharacteristic") { (
+      _: String, _: String, _: String, _: String, _: Double, promise: Promise
+    ) in
+      promise.reject("UNAVAILABLE", "HomeKit is not available on macOS")
+    }
+
+    AsyncFunction("writeStringCharacteristic") { (
+      _: String, _: String, _: String, _: String, _: String, promise: Promise
+    ) in
+      promise.reject("UNAVAILABLE", "HomeKit is not available on macOS")
+    }
+
+    AsyncFunction("readCharacteristic") { (
+      _: String, _: String, _: String, _: String, promise: Promise
+    ) in
+      promise.reject("UNAVAILABLE", "HomeKit is not available on macOS")
+    }
+
+    AsyncFunction("executeScene") { (_: String, _: String, promise: Promise) in
+      promise.reject("UNAVAILABLE", "HomeKit is not available on macOS")
+    }
+
+    AsyncFunction("enableNotifications") { (_: String, promise: Promise) in
+      promise.resolve(nil)
+    }
+  }
+}
+
+#endif
